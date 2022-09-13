@@ -80,31 +80,31 @@ plugins: [
                     prefix: 'your-prefix/',
                     // Custom Serializer 
                     serializer: (edges: any) => {
-                    return edges.map(({ node }: any) => {
-                        return {
-                        node: {
-                            id: node.id,
-                            slug: node.slug,
-                            url: node.url,
-                            updated_at: node?.pageContext?.date, // updated_at || published_at || created_at
-                            cover_image: node?.pageContext?.image, // cover_image || profile_image || feature_image;
-                        },
-                        }
-                    })
+                        return edges.map(({ node }: any) => {
+                            return {
+                                node: {
+                                    id: node.id,
+                                    slug: node.slug,
+                                    url: node.url,
+                                    updated_at: node?.pageContext?.date, // updated_at || published_at || created_at
+                                    cover_image: node?.pageContext?.image, // cover_image || profile_image || feature_image;
+                                },
+                            }
+                        })
                     },
                 },
                 categories: {
                     sitemap: `categories`,
                     serializer: (edges: any) => {
-                    return edges.map(({ node }: any) => {
-                        return {
-                        node: {
-                            id: node.id,
-                            slug: node.slug,
-                            url: node.url,
-                        },
-                        }
-                    })
+                        return edges.map(({ node }: any) => {
+                            return {
+                                node: {
+                                    id: node.id,
+                                    slug: node.slug,
+                                    url: node.url,
+                                },
+                            }
+                        })
                     },
                 },
             },
@@ -155,5 +155,31 @@ Run Tests
 ```bash
 yarn test
 ```
+
+## API Reference
+
+## serialize ⇒ <code>object</code>
+
+receives: object[] - - Array of objects representing each page
+
+| Param | Type                | Description                                               |
+|-------|---------------------|-----------------------------------------------------------|
+| edges | <code>object</code> | this function receives the result of the executed queries |
+
+Returns: object[] - - Array of objects containing the data needed to generate the sitemap urls
+
+| Return Object                               | Type                  | Description                                                          |
+|---------------------------------------------|-----------------------|----------------------------------------------------------------------|
+| id                                          | <code>string</code>   | page path                                                            |
+| url                                         | <code>string</code>   | page path                                                            |
+| slug                                        | <code>string</code>   | page path                                                            |
+| updated_at / published_at / created_at      | <code>string</code>   | Optional: string representing when last the page was updated         |
+| cover_image / profile_image / feature_image | <code>object</code>   | Optional: object representing a single image                         |
+| pageImages                                  | <code>object[]</code> | Optional: Array containing multiple images to be linked for the page |
+
+| Image Object | Type                | Description                                                  |
+|--------------|---------------------|--------------------------------------------------------------|
+| path         | <code>string</code> | image path                                                   |
+| caption      | <code>string</code> | Optional: caption describing the image, similar to alt tags. |
 
 &nbsp;

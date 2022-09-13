@@ -36,7 +36,7 @@ export default class BaseSiteMapGenerator {
         // Sort nodes by timestamp
         const sortedNodes = sortBy(timedNodes, `ts`);
         // Grab just the nodes
-        const urlElements = sortedNodes.map(el => el.node);
+        const urlElements = sortedNodes.map((el) => el.node);
         const data = {
             // Concat the elements to the _attr declaration
             urlset: [XMLNS_DECLS].concat(urlElements),
@@ -85,10 +85,7 @@ export default class BaseSiteMapGenerator {
     }
 
     createUrlNodeFromDatum(url, datum) {
-        let node;
-        let imgNode;
-
-        node = {
+        const node = {
             url: [
                 { loc: url },
                 {
@@ -100,37 +97,43 @@ export default class BaseSiteMapGenerator {
             ],
         };
 
-        imgNode = this.createImageNodeFromDatum(datum);
-
-        if (imgNode) {
-            node.url.push(imgNode);
-        }
+        const imageNodes = this.createImageNodesFromDatum(datum);
+        node.url.push(...imageNodes);
 
         return node;
     }
 
-    createImageNodeFromDatum(datum) {
-        // Check for cover first because user has cover but the rest only have image
-        const image =
-            datum.cover_image || datum.profile_image || datum.feature_image;
-        let imageEl;
+    createImageNodesFromDatum(datum) {
+        const imageNodes = [];
 
-        if (!image) {
-            return;
+        // Check for cover first because user has cover but the rest only have image
+        const coverImageData =
+            datum.cover_image || datum.profile_image || datum.feature_image;
+
+        if (coverImageData?.path) {
+            const nodeImage = this.createImageNode(coverImageData);
+            imageNodes.push(nodeImage);
         }
 
+        if (datum.page_images) {
+            const pageImages = datum.page_images
+                .filter((imageData) => !!imageData?.path)
+                .map((imageData) => this.createImageNode(imageData));
+            imageNodes.push(...pageImages);
+        }
+
+        return imageNodes;
+    }
+
+    createImageNode(image) {
         // Create the weird xml node syntax structure that is expected
-        imageEl = [
-            { 'image:loc': image },
-            { 'image:caption': path.basename(image) },
+        const imageEl = [
+            { "image:loc": image.path },
+            { "image:caption": image?.caption || path.basename(image) },
         ];
 
         // Return the node to be added to the url xml node
         return { "image:image": imageEl }; //eslint-disable-line
-    }
-
-    validateImageUrl(imageUrl) {
-        return !!imageUrl;
     }
 
     getXml(options) {

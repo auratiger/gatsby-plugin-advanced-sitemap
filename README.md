@@ -1,9 +1,6 @@
 # gatsby-plugin-advanced-sitemap
 
-The default Gatsby sitemap plugin generates a simple blob of raw XML for all your pages. This **advanced sitemap plugin** adds more power and configuration, generating a single or multiple sitemaps with full XSL templates to make them neatly organised and human + machine readable, as well linking image resources to encourage media indexing.
-
-**Demo:** https://gatsby.ghost.org/sitemap.xml
-
+The default Gatsby sitemap plugin generates a simple blob of raw XML for all your pages. This **advanced sitemap plugin** adds more power and configuration, generating a single or multiple sitemaps with full XSL templates to make them neatly organized and human + machine readable, as well linking image resources to encourage media indexing.
 
 &nbsp;
 
@@ -13,10 +10,9 @@ _NOTE: This plugin only generates output in `production` mode! To test, run: `ga
 
 &nbsp;
 
-
 ## Install
 
-`npm install --save gatsby-plugin-advanced-sitemap`
+`npm install --save @auratiger/gatsby-plugin-advanced-sitemap-reworked`
 
 ## How to Use
 
@@ -29,7 +25,7 @@ siteMetadata: {
     siteUrl: `https://www.example.com`,
 },
 plugins: [
-    `gatsby-plugin-advanced-sitemap`
+    `@auratiger/gatsby-plugin-advanced-sitemap-reworked`
 ]
 ```
 
@@ -37,7 +33,7 @@ plugins: [
 
 ## Options
 
-If you want to generate advanced, individually organised sitemaps based on your data, you can do so by passing in a query and config. The example below uses [Ghost](https://ghost.org/), but this should work with any data source - including Pages, Markdown, Contentful, etc.
+If you want to generate advanced, individually organized sitemaps based on your data, you can do so by passing in a query and config. The example below uses [Ghost](https://ghost.org/), but this should work with any data source - including Pages, Markdown, Contentful, etc.
 
 **Example:**
 
@@ -46,46 +42,27 @@ If you want to generate advanced, individually organised sitemaps based on your 
 
 plugins: [
     {
-        resolve: `gatsby-plugin-advanced-sitemap`,
+        resolve: `@auratiger/gatsby-plugin-advanced-sitemap-reworked`,
         options: {
              // 1 query for each data type
             query: `
             {
-                allGhostPost {
+                posts: allSitePage(filter: {path: {regex: "//posts.*/"}}) {
                     edges {
                         node {
                             id
-                            slug
-                            updated_at
-                            feature_image
+                            slug: path
+                            url: path
+                            pageContext
                         }
                     }
                 }
-                allGhostPage {
+                categories: allSitePage(filter: {path: {regex: "//categories.*/"}}) {
                     edges {
                         node {
                             id
-                            slug
-                            updated_at
-                            feature_image
-                        }
-                    }
-                }
-                allGhostTag {
-                    edges {
-                        node {
-                            id
-                            slug
-                            feature_image
-                        }
-                    }
-                }
-                allGhostAuthor {
-                    edges {
-                        node {
-                            id
-                            slug
-                            profile_image
+                            slug: path
+                            url: path
                         }
                     }
                 }
@@ -96,26 +73,39 @@ plugins: [
                 // Each data type can be mapped to a predefined sitemap
                 // Routes can be grouped in one of: posts, tags, authors, pages, or a custom name
                 // The default sitemap - if none is passed - will be pages
-                allGhostPost: {
+                posts: {
                     sitemap: `posts`,
                     // Add a query level prefix to slugs, Don't get confused with global path prefix from Gatsby
                     // This will add a prefix to this particular sitemap only
                     prefix: 'your-prefix/',
                     // Custom Serializer 
-                    serializer: (edges) => {
-                        return edges.map(({ node }) => {
-                            (...) // Custom logic to change final sitemap.
-                        })
-                    }
+                    serializer: (edges: any) => {
+                    return edges.map(({ node }: any) => {
+                        return {
+                        node: {
+                            id: node.id,
+                            slug: node.slug,
+                            url: node.url,
+                            updated_at: node?.pageContext?.date, // updated_at || published_at || created_at
+                            cover_image: node?.pageContext?.image, // cover_image || profile_image || feature_image;
+                        },
+                        }
+                    })
+                    },
                 },
-                allGhostTag: {
-                    sitemap: `tags`,
-                },
-                allGhostAuthor: {
-                    sitemap: `authors`,
-                },
-                allGhostPage: {
-                    sitemap: `pages`,
+                categories: {
+                    sitemap: `categories`,
+                    serializer: (edges: any) => {
+                    return edges.map(({ node }: any) => {
+                        return {
+                        node: {
+                            id: node.id,
+                            slug: node.slug,
+                            url: node.url,
+                        },
+                        }
+                    })
+                    },
                 },
             },
             exclude: [
@@ -167,7 +157,3 @@ yarn test
 ```
 
 &nbsp;
-
-# Copyright & License
-
-Copyright (c) 2013-2022 [Ghost Foundation](https://ghost.org/) - Released under the [MIT license](LICENSE).

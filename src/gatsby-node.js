@@ -33,7 +33,7 @@ const runQuery = (handler, { query, mapping, exclude }) => handler(query).then((
     for (let source in r.data) {
         // Check for custom serializer
         if (typeof mapping?.[source]?.serializer === `function`) {
-            if (r.data[source] && Array.isArray(r.data[source].edges)) { 
+            if (r.data[source] && Array.isArray(r.data[source].edges)) {
                 const serializedEdges = mapping[source].serializer(r.data[source].edges);
 
                 if (!Array.isArray(serializedEdges)) {
@@ -45,10 +45,10 @@ const runQuery = (handler, { query, mapping, exclude }) => handler(query).then((
 
         // Removing excluded paths
         if (r.data?.[source]?.edges && r.data[source].edges.length) {
-            r.data[source].edges = r.data[source].edges.filter(({ node }) => !exclude.some((excludedRoute) => { 
+            r.data[source].edges = r.data[source].edges.filter(({ node }) => !exclude.some((excludedRoute) => {
                 const sourceType = node.__typename ? `all${node.__typename}` : source;
                 const slug = (sourceType === `allMarkdownRemark` || sourceType === `allMdx`) || (node?.fields?.slug) ? node.fields.slug.replace(/^\/|\/$/, ``) : node.slug.replace(/^\/|\/$/, ``);
-                
+
                 excludedRoute = typeof excludedRoute === `object` ? excludedRoute : excludedRoute.replace(/^\/|\/$/, ``);
 
                 // test if the passed regular expression is valid
@@ -80,7 +80,7 @@ const serialize = ({ ...sources } = {}, { site, allSitePage }, { mapping, addUnc
     const sourceObject = {};
 
     const allSitePagePathNodeMap = new Map();
-    
+
     allSitePage.edges.forEach((page) => {
         if (page?.node?.url){
             const pathurl = page.node.url.replace(/\/$/,``);
@@ -154,10 +154,16 @@ exports.onPostBuild = async ({ graphql, pathPrefix }, pluginOptions) => {
 
     // Passing the config option addUncaughtPages will add all pages which are not covered by passed mappings
     // to the default `pages` sitemap. Otherwise they will be ignored.
-    const options = pluginOptions.addUncaughtPages ? merge(defaultOptions, pluginOptions) : Object.assign({}, defaultOptions, pluginOptions);
+    const options = pluginOptions.addUncaughtPages
+        ? merge(defaultOptions, pluginOptions)
+        : Object.assign({}, defaultOptions, pluginOptions);
 
     const indexSitemapFile = path.join(PUBLICPATH, pathPrefix, options.output);
-    const resourcesSitemapFile = path.join(PUBLICPATH, pathPrefix, RESOURCESFILE);
+    const resourcesSitemapFile = path.join(
+        PUBLICPATH,
+        pathPrefix,
+        RESOURCESFILE
+    );
 
     delete options.plugins;
     delete options.createLinkInHead;
@@ -168,10 +174,10 @@ exports.onPostBuild = async ({ graphql, pathPrefix }, pluginOptions) => {
     // We always query siteAllPage as well as the site query to
     // get data we need and to also allow not passing any custom
     // query or mapping
-    const defaultQueryRecords = await runQuery(
-        graphql,
-        { query: DEFAULTQUERY, exclude: options.exclude }
-    );
+    const defaultQueryRecords = await runQuery(graphql, {
+        query: DEFAULTQUERY,
+        exclude: options.exclude,
+    });
 
     // Don't run this query when no query and mapping is passed
     if (!options.query || !options.mapping) {
@@ -180,17 +186,19 @@ exports.onPostBuild = async ({ graphql, pathPrefix }, pluginOptions) => {
         queryRecords = await runQuery(graphql, options);
     }
 
-    // Instanciate the Ghost Sitemaps Manager
+    // Instantiate the Sitemaps Manager
     const manager = new Manager(options);
 
-    await serialize(queryRecords, defaultQueryRecords, options).forEach((source) => {
-        for (let type in source) {
-            source[type].forEach((node) => {
-                // "feed" the sitemaps manager with our serialized records
-                manager.addUrls(type, node);
-            });
+    await serialize(queryRecords, defaultQueryRecords, options).forEach(
+        (source) => {
+            for (let type in source) {
+                source[type].forEach((node) => {
+                    // "feed" the sitemaps manager with our serialized records
+                    manager.addUrls(type, node);
+                });
+            }
         }
-    });
+    );
 
     // The siteUrl is only available after we have the returned query results
     options.siteUrl = siteURL;
@@ -226,7 +234,10 @@ exports.onPostBuild = async ({ graphql, pathPrefix }, pluginOptions) => {
     }
 
     for (let sitemap of resourcesSiteMapsArray) {
-        const filePath = resourcesSitemapFile.replace(/:resource/, sitemap.type);
+        const filePath = resourcesSitemapFile.replace(
+            /:resource/,
+            sitemap.type
+        );
 
         // Save the generated xml files in the public folder
         try {

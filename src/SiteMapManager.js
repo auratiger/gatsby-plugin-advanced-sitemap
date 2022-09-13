@@ -50,8 +50,6 @@ export default class SiteMapManager {
         return this[type].getXml(options);
     }
 
-    // This is the equivalent of adding the URLs on bootstrap by listening to the events
-    // like we do in Ghost core
     addUrls(type, { url, node }) {
         return this[type].addUrl(url, node);
     }
